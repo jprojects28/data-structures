@@ -1,0 +1,166 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <string.h>
+
+#define MAX_STATIONS 50
+
+struct Station {
+    int id;
+    char name[50];
+};
+
+struct MetroGraph {
+    int numStations;
+    struct Station stations[MAX_STATIONS];
+    int adjacencyMatrix[MAX_STATIONS][MAX_STATIONS];
+};
+
+void initMetroGraph(struct MetroGraph *graph) {
+    graph->numStations = 0;
+    for (int i = 0; i < MAX_STATIONS; ++i) {
+        for (int j = 0; j < MAX_STATIONS; ++j) {
+            graph->adjacencyMatrix[i][j] = INT_MAX;
+        }
+    }
+}
+
+void addStation(struct MetroGraph *graph, const char *name) {
+    if (graph->numStations < MAX_STATIONS) {
+        graph->stations[graph->numStations].id = graph->numStations;
+        strncpy(graph->stations[graph->numStations].name, name, sizeof(graph->stations[graph->numStations].name) - 1);
+        graph->stations[graph->numStations].name[sizeof(graph->stations[graph->numStations].name) - 1] = '\0';
+        graph->numStations++;
+    } else {
+        printf("Error: Cannot add more stations. Maximum limit reached.\n");
+    }
+}
+
+void addMR(struct MetroGraph *graph, int station1, int station2, int cost) {
+    graph->adjacencyMatrix[station1][station2] = cost;
+    graph->adjacencyMatrix[station2][station1] = cost;
+}
+
+void dijkstra(struct MetroGraph *graph, int startStation, int endStation) {
+    int dist[MAX_STATIONS];
+    int visited[MAX_STATIONS];
+    int parent[MAX_STATIONS];
+    for (int i = 0; i < MAX_STATIONS; ++i) {
+        dist[i] = INT_MAX;
+        visited[i] = 0;
+        parent[i] = -1;
+    }
+
+    dist[startStation] = 0;
+
+    for (int count = 0; count < graph->numStations - 1; ++count) {
+        int minDist = INT_MAX;
+        int minIndex = -1;
+
+        for (int i = 0; i < graph->numStations; ++i) {
+            if (visited[i] == 0 && dist[i] < minDist) {
+                minDist = dist[i];
+                minIndex = i;
+            }
+        }
+
+        visited[minIndex] = 1;
+
+        for (int i = 0; i < graph->numStations; ++i) {
+            if (!visited[i] && graph->adjacencyMatrix[minIndex][i] != INT_MAX &&
+                dist[minIndex] + graph->adjacencyMatrix[minIndex][i] < dist[i]) {
+                dist[i] = dist[minIndex] + graph->adjacencyMatrix[minIndex][i];
+                parent[i] = minIndex;
+            }
+        }
+    }
+
+    printf("Shortest route from %s to %s:\n", graph->stations[startStation].name, graph->stations[endStation].name);
+    int currentStation = endStation;
+    printf("%s", graph->stations[currentStation].name);
+    while (parent[currentStation] != -1) {
+        printf(" <- %s", graph->stations[parent[currentStation]].name);
+        currentStation = parent[currentStation];
+    }
+    printf("\nTotal Cost: %d Rs\n" , dist[endStation]);
+}
+
+
+    
+
+int main() {
+    
+    struct MetroGraph graph;
+    initMetroGraph(&graph);
+    
+    printf("_____________________________________________ \n");
+    printf("| STATION CODE   |        STATION NAME       |\n");
+    printf("|________________|___________________________|\n");
+    printf("|    00          |   Ghatkopar               |\n");
+    printf("|    01          |   Jagruti Nagar           |\n");
+    printf("|    02          |   Asalpha                 |\n");
+    printf("|    03          |   Saki Naka               |\n");
+    printf("|    04          |   Marol Naka              |\n");
+    printf("|    05          |   Airport Road            |\n");
+    printf("|    06          |   Chakala                 |\n");
+    printf("|    07          |   Wester Express Highway  |\n");
+    printf("|    08          |   Andheri                 |\n");
+    printf("|    09          |   Azad Nagar              |\n");
+    printf("|    10          |   DN Nagar                |\n");
+    printf("|    11          |   Versova                 |\n");
+    printf("|____________________________________________|\n");
+    // Adding stations (blue Line)
+    addStation(&graph, "Ghatkopar");
+    addStation(&graph, "Jagruti Nagar");
+    addStation(&graph, "Asalpha");
+    addStation(&graph, "Saki Naka");
+    addStation(&graph, "Marol Naka");
+    addStation(&graph, "Airport Road");
+    addStation(&graph, "Chakala");
+    addStation(&graph, "Western Express Highway");
+    addStation(&graph, "Andheri");
+    addStation(&graph, "Azad Nagar");
+    addStation(&graph, "DN Nagar");
+    addStation(&graph, "Versova");
+    // Adding metro routes with costs
+    
+    addMR(&graph, 0, 1, 10);  // Ghatkopar to Jagruti Nagar
+    addMR(&graph, 0, 2, 10);  // Jagruti Nagar to Asalpha
+    addMR(&graph, 0, 3, 20);  // Asalpha to Saki Naka
+    addMR(&graph, 0, 4, 20);  // Saki Naka to Marol Naka
+    addMR(&graph, 0, 5, 20);  // Marol Naka to Airport Road
+    addMR(&graph, 0, 6, 30);  // Airport Road to Chakala
+    addMR(&graph, 0, 7, 30);  // Chakala to Western Express Highway
+    addMR(&graph, 0, 8, 30);  // Western Express Highway to Andheri
+    addMR(&graph, 0, 9, 40);  // Andheri to Azad Nagar
+    addMR(&graph, 0, 10, 40); // Azad Nagar to DN Nagar
+    addMR(&graph, 0, 11, 40); // DN Nagar to Versova
+
+
+     int source, destination;
+    
+    // Taking input for source station
+    printf("Please Enter the source station (0 to %d): ", graph.numStations - 1);
+    scanf("%d", &source);
+
+    // Validating source station input
+    if (source< 0 || source >= graph.numStations) {
+        printf("Invalid source station input. Exiting...\n");
+        return 1;
+    }
+
+    // Taking input for destination station
+    printf("Please Enter the destination station (0 to %d): ", graph.numStations - 1);
+    scanf("%d", &destination);
+
+    // Validating destination station input
+    if (destination < 0 || destination >= graph.numStations) {
+        printf("Invalid destination station input. EXITING THE PROGRAM \n");
+        return 1;
+    }
+
+    // Finding the shortest route and cost
+    dijkstra(&graph, source, destination);
+
+    return 0;
+}
